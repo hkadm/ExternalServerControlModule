@@ -1,0 +1,1146 @@
+<!doctype html>
+<html>
+<head>
+	<meta charset="utf-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+	<meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>ControlPanel</title>
+    <script>
+
+const g_base_url = '';
+
+    </script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/4.6.1/css/bootstrap.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+#controlpanel { padding: 1rem 0.5rem; padding-bottom: 10rem; max-width: 640px; }
+@media (min-width: 576px) { #controlpanel { padding: 1rem; } } 
+#controlpanel>#board { display: none; }
+#controlpanel .box { margin: 1.5rem 0; }
+#controlpanel .box-head { color: #26272a; font-size: 1.2rem; font-weight: bold; }
+#controlpanel .box-body { margin: 1rem 0 1.5rem 0; }
+#controlpanel .box-area { margin: 1rem 0; padding: 0 0.8rem; background-color: #f7f8fa; border: solid 1px #e3e6e8; border-radius: 8px; }
+#controlpanel .box-line { margin: 0.7rem 0; }
+#controlpanel .box-info { position: relative; margin-top: 1rem; }
+#controlpanel .box-info .info { background-color: #fbeaeb; padding: 0.7rem 2rem 0.7rem 1rem; border-radius: 5px; color: #bd2f3d; }
+#controlpanel .box-info .info-btn { position: relative; }
+#controlpanel .box-info .info-close { color: #e05f65; font-size: 1.2rem; cursor: pointer; float: right; top: -9px; left: -7px; }
+#controlpanel .strong { font-weight: bold; }
+#controlpanel .label:after { content: ':'; }
+#controlpanel button { font-size: 0.92rem; border-radius: 8px; padding: 5px 15px; }
+#controlpanel button.btn-small { font-size: 0.8rem; padding: 2px 10px; }
+#controlpanel button.btn-heavy { color: #fff; background-color: #8f58d7; }
+#controlpanel button.btn-heavy:hover { background-color: #6b2ebe; }
+#controlpanel button.btn-regular { color: #9561da; background-color: #f1eafa; }
+#controlpanel button.btn-regular:hover { background-color: #d9c7f1; }
+#controlpanel select { font-size: 0.92rem; color: #aab3bb; border-radius: 8px; padding: 10px 15px; width: 100%; background-color: #fff; border: solid 1px #c6ccd2; }
+#controlpanel select option[value=""] { color: #aab3bb; }
+#controlpanel select option { color: #000; }
+#controlpanel .network-interface+.network-interface { margin-top: 2rem; }
+#controlpanel .network-addresses-title { font-size: 0.92rem; margin: 0 0 5px 5px; }
+#controlpanel .network-addresses { max-height: 430px; overflow-x: hidden; overflow-y: auto; margin-top: 0; }
+#controlpanel .network-address .text-status { font-size: 0.8rem; }
+#controlpanel .badge-grey { color: #17191c; background-color: #e3e6e8; font-weight: normal; }
+#controlpanel [name="interface_type"], [name="mac_address"], [name="ip_address"] { font-weight: bold; }
+#controlpanel [name="interface_status"] { text-transform: capitalize; }
+#controlpanel [name="server_name"] { font-size: 1.4rem; }
+#controlpanel .text-status { font-size: 0.92rem; border-radius: 8px; padding: 6px 12px; margin-right: 3px; }
+#controlpanel .text-status.enabled { background-color: #d3f8ed; }
+#controlpanel .text-status.disabled { background-color: #f7d4d7; }
+#controlpanel .vm-status { display: none; }
+#controlpanel i.vm-status { font-size: 1.2rem; }
+#controlpanel i.vm-status[name="vm_up"] { color: #23cb98; }
+#controlpanel i.vm-status[name="vm_down"] { color: #e36c75; }
+#controlpanel .dropdown-item { padding: 0.5rem 1.5rem 0.5rem 0.7rem !important; }
+#controlpanel .dropdown-item:hover { background-color: #f1eafa !important; }
+#controlpanel #stat { position: relative; border: 1px solid #eee; max-width: 100%; max-height: 75vh; overflow: auto; }
+#controlpanel #stat>table { table-layout: fixed; border-collapse: separate; border-spacing: 0; }
+#controlpanel #stat>table td, #controlpanel #stat>table th { position: sticky; background: white; border: 1px solid #eee; font-size: 0.8rem; text-align: center; padding: 5px; }
+#controlpanel #stat>table th { font-size: 0.7rem; }
+#controlpanel #stat>table th:not(.sub-set) { background: #f7f7f7; }
+#controlpanel #stat>table thead th { white-space: nowrap; top: 0; z-index: 2; }
+#controlpanel #stat>table thead th:first-child { left: 0; z-index: 3; }
+#controlpanel #stat>table tbody th { text-align: left; left: 0; z-index: 1; }
+#controlpanel #stat>table .sub-set { left: 0; padding: 0; }
+#controlpanel #stat>table .sub-set>span { display: inline-block; font-size: 0.8rem; position: sticky; left: 2rem; padding: 10px; }
+#controlpanel #trafficTotal { text-align: center; margin-top: 1rem; }
+#controlpanel #trafficTotal>span { white-space: nowrap; }
+#controlpanel .mounted-iso-line { display: none; }
+#controlpanel .server-info>span+span:before { content: '|'; margin: 0 0.5rem; }
+    </style>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/4.6.1/js/bootstrap.bundle.min.js"></script>
+    <script src="https://www.gstatic.com/charts/loader.js"></script>
+    <script>
+
+google.charts.load('current', { packages: ['corechart', 'line', 'bar'] });
+
+    </script>
+</head>
+<body id="controlpanel">
+<div id="board">
+    <div class="box">
+        <div class="box-head"><span name="server_name"></span></div>
+        <div class="box-body">
+            <div class="box-line server-info text-nowrap text-truncate">
+                <span><i name="vm_up" class="fa-regular fa-circle-play vm-status"></i><i name="vm_down" class="fa-regular fa-circle-stop vm-status"></i> <span name="vm_up" class="strong vm-status">Running</span><span name="vm_down" class="strong vm-status">Stopped</span></span>
+                <span><span class="label strong">Region</span> <span name="server_region"></span></span>
+                <span id="server-preset"><span class="label strong">Preset</span> <span name="server_preset"></span></span>
+            </div>
+            <div class="box-area">
+                <div class="box-line row">
+                    <div class="col-12 col-sm-auto p-1 mr-sm-3"><span class="label">CPU</span> <span name="hw_cpu"></span></div>
+                    <div class="col-auto col-sm-auto p-1"><span class="label">RAM</span> <span name="hw_ram"></span><span class="label ml-3">Storage</span> <span name="hw_hdd"></span></div>
+                </div>
+            </div>
+            <div class="box-line text-nowrap">
+                <button type="button" class="btn btn-regular power-type-1 vm-status" data-request='{"module":"eq","action":"on","attempts":200}' name="power_on">Power on</button>
+                <button type="button" class="btn btn-regular power-type-1 vm-status" data-request='{"module":"eq","action":"off","attempts":200}' name="power_off">Power off</button>
+                <button type="button" class="btn btn-regular power-type-1" data-request='{"module":"eq","action":"reboot","attempts":200}' name="reboot">Reboot</button>
+                <button type="button" class="btn btn-regular power-type-2 vm-status" data-modal="request_pon" name="request_pon">Power On</button>
+                <button type="button" class="btn btn-regular power-type-2 vm-status" data-modal="request_poff" name="request_poff">Power Off</button>
+                <button type="button" class="btn btn-regular power-type-2" data-modal="request_reboot" name="request_reboot">Reboot</button>
+                <button type="button" class="btn btn-regular d-none d-sm-inline-block" data-request='{"module":"eq","action":"console"}' name="vnc_console">VNC console</button>
+                <button type="button" class="btn btn-regular d-none d-md-inline-block" data-request='{"module":"eq","action":"novnc"}' name="html5_console">HTML5 console</button>
+                <div class="btn-group">
+                    <button type="button" class="btn btn-regular" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false"><i class="fa-solid fa-ellipsis"></i></button>
+                    <div class="dropdown-menu dropdown-menu-right">
+                        <button class="dropdown-item d-sm-none" type="button" data-request='{"module":"eq","action":"console"}' name="vnc_console">VNC console</button>
+                        <button class="dropdown-item d-md-none" type="button" data-request='{"module":"eq","action":"novnc"}' name="html5_console">HTML5 console</button>
+                        <button class="dropdown-item power-type-1" type="button" data-request='{"module":"eq","action":"status"}' name="power_status">Power status</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="box" id="box-iso">
+        <div class="box-head">ISO-image and rescue mode</div>
+        <div class="box-body">
+            <div class="box-line">
+                <div class="row align-items-center">
+                    <div class="col"><select name="iso_images"><option value="">No available ISO images</option></select></div>
+                    <div class="col-auto pl-0 d-none d-sm-inline-block">
+                        <button type="button" class="btn btn-regular" data-request='{"module":"iso","action":"mount_iso"}'>Mount ISO</button>
+                    </div>
+                </div>
+            </div>
+            <div class="box-line d-sm-none">
+                <button type="button" class="btn btn-regular w-100" data-request='{"module":"iso","action":"mount_iso"}'>Mount ISO</button>
+            </div>
+            <div class="box-line mounted-iso-line">
+                <div class="box-line">
+                    <div class="row align-items-center">
+                        <div class="col text-nowrap text-truncate"><span class="label">Mounted</span> <span name="mounted_iso_name"></span></div>
+                        <div class="col-auto pl-0 d-none d-sm-inline-block text-nowrap">
+                            <button type="button" class="btn btn-regular" data-request='{"module":"eq","action":"boot_dev","media":"cd","attempts":50}'>Boot from ISO</button>
+                            <button type="button" class="btn btn-regular" data-request='{"module":"iso","action":"unmount_iso"}'>Unmount ISO</button>
+                        </div>
+                    </div>
+                </div>
+                <div class="box-line d-sm-none row">
+                    <div class="col p-0 pr-1"><button type="button" class="btn btn-regular w-100" data-request='{"module":"eq","action":"boot_dev","media":"cd","attempts":50}'>Boot from ISO</button></div>
+                    <div class="col p-0 pl-1"><button type="button" class="btn btn-regular w-100" data-request='{"module":"iso","action":"unmount_iso"}'>Unmount ISO</button></div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="box">
+        <div class="box-head">Network</div>
+        <div class="box-body" id="network-body"></div>
+        <div class="network-interface d-none">
+            <div class="row">
+                <div class="col-auto text-nowrap text-truncate py-2"><span class="label">Interface</span> <span name="interface_type"></span> <span class="badge badge-grey is-main ml-2">Main</span></div>
+                <div class="col-12 col-sm text-nowrap pl-sm-0 py-2">
+                    <span class="text-status" name="interface_status"></span>
+                    <button type="button" class="btn btn-regular float-right" data-request='{"module":"net","action":"port_on"}' name="unblock_port">Enable</button>
+                    <button type="button" class="btn btn-regular float-right" data-modal="block-port" name="block_port">Disable</button>
+                </div>
+            </div>
+            <div class="network-addresses-title">Addresses (<span name="ip_count"></span>)</div>
+            <div class="box-area network-addresses py-2"></div>
+        </div>
+        <div class="network-address d-none row">
+            <div class="col-12 col-sm px-2 py-1 text-nowrap text-truncate"><span class="label" name="order"></span> <span name="mac_address"></span> <span name="ip_address"></span> <span class="badge badge-grey is-main ml-2">Main</span></div>
+            <div class="col-12 col-sm-auto px-2 py-1 text-nowrap text-right">
+                <button type="button" class="btn btn-heavy btn-small" kind="" data-request='{"module":"net","action":"unblock_ip"}' name="unblock_ip">Unblock IP</button>
+                <button type="button" class="btn btn-regular btn-small" kind="" data-modal="block-ip" name="block_ip">Block IP</button>
+                <button type="button" class="btn btn-regular btn-small" kind="" data-request='{"module":"ip","action":"get_traffic","summary":2}'>Traffic chart</button>
+                <button type="button" class="btn btn-regular btn-small d-sm-none " kind="" data-request='{"module":"net","action":"nmap"}'>Scan IP</button>
+                <button type="button" class="btn btn-regular btn-small d-sm-none" kind="ipmi" data-modal="ip-settings">Settings</button>
+                <div class="btn-group d-none d-sm-inline-block" kind="">
+                    <button type="button" class="btn btn-regular btn-small" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false"><i class="fa-solid fa-ellipsis"></i></button>
+                    <div class="dropdown-menu dropdown-menu-right">
+                        <button class="dropdown-item" type="button" data-request='{"module":"net","action":"nmap"}'>Scan IP</button>
+                        <button class="dropdown-item" type="button" data-modal="ip-settings">Settings</button>
+                    </div>
+                </div>
+            </div>
+            <div class="col-12 px-1 pt-1 pb-2"><div class="text-status" name="ip_status"></div></div>
+        </div>
+    </div>
+    <div class="box">
+        <div class="box-head">Traffic usage</div>
+        <div class="box-body" id="traffic_usage">
+            <div class="box-line"><span class="label">Inbound</span> <span name="inbond"></span></div>
+            <div class="box-line"><span class="label">Outbound</span> <span name="outbond"></span></div>
+            <div class="box-line">
+                <button type="button" class="btn btn-heavy" data-request='{"module":"eq","action":"get_traffic"}'>View stats</button>
+            </div>
+        </div>
+    </div>
+</div>
+<div id="modal-template" class="modal" tabindex="-1" role="dialog">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header border-0">
+                <h5 class="modal-title font-weight-bold"></h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+            </div>
+            <div class="modal-body"></div>
+            <div class="modal-footer border-0 justify-content-center"><button type="button" class="btn btn-heavy" data-dismiss="modal">Close</button></div>
+        </div>
+    </div>
+</div>
+<script>
+
+var g_api_key;
+var g_login;
+var g_server;
+var g_hardware;
+var g_interfaces;
+var g_ips;
+var g_ipmi;
+var g_preset;
+var g_location;
+var g_tags;
+var g_isos;
+
+$(document).on('click', '[data-modal]', event => doModal(event));
+$(document).on('click', '[data-request]', event => doRequest(event));
+$(document).on('click', '.info-close', event => hideInfo({ target: event.target.parentElement }));
+
+$(document).ready(function() {
+    g_login = undefined;
+    g_api_key = (new URL(location)).searchParams.get('key');
+    if (g_api_key === null) {
+        showMessage('info', 'API key is not given');
+    }
+    else if (getCookie(getSessionPrefix() + 'token')) {
+        restoreSession();
+        doRequest({ module: 'eq', action: 'show' });
+    }
+    else {
+        login().then(() => doRequest({ module: 'eq', action: 'show' }));
+    }
+});
+
+async function login() {
+    return await ajax('auth', { action: 'login', key: g_api_key }).then(response => {
+        if (response?.error) { showMessage('error', response.error); }
+        else { storeSession(response.result); }
+        return response;
+    });
+}
+
+async function doRequest(event) {
+    hideInfo();
+
+    const request = event?.target ? JSON.parse(event.target.dataset.request) : event;
+    if (!request) { return; }
+    if (!request?.module) { showInfo(event, 'Module is not given'); return; }
+    if (!request?.action) { showInfo(event, 'Action is not given'); return; }
+    if (!request?.attempts) { request.attempts = 50; }
+    if (!request?.timeout) { request.timeout = 1000; }
+    request.token = g_login.token;
+    request.id = g_login.servers[0];
+    request.api_key = 1;
+
+    switch(request.action) {
+        case 'mount_iso':
+            request.iso = $('[name="iso_images"]').val();
+            if ((request.iso ?? '') == '') {
+                showInfo(event, 'Please select ISO image to proceed.')
+                return;
+            }
+        break;
+        case 'get_traffic': {
+            let d = new Date();
+            d.setMonth(d.getMonth() - 1);
+            d.setHours(0, 0, 0, 0);
+            request.period_start = d / 1000 | 0;
+            request.period_stop = Date.now() / 1000 | 0;
+        }
+        case 'nmap':
+            request.ip = event.target.dataset.ip;
+        break;
+        case 'port_on':
+            request.port = event.target.dataset.port;
+        break;
+        case 'port_off':
+            request.reason = $('[name="block_reason"]', request.parent_selector).val();
+        break;
+        case 'unblock_ip':
+            request.ip = event.target.dataset.ip;
+        break;
+        case 'block_ip':
+            request.description = $('[name="block_reason"]', request.parent_selector).val();
+            request.four_hours = $('[name="block_4hours"]').prop('checked') ? 1 : 0;
+        break;
+        case 'set_main':
+            request.main = $('#main_ip', request.parent_selector).prop('checked') ? 1 : 0;
+            request.description = $('.data-ip-description', request.parent_selector).val();
+        break;
+        case 'update_ptr':
+            request.ptr = $('#ip_ptr', request.parent_selector).val();
+        break;
+    }
+
+    const request_uniq = Date.now();
+    startWait(event, request_uniq);
+    return await ajax(request.module, request).then(response => {
+        if (response.result == 'OK' || request.result == 'OK') {
+            if (response.callback) {
+                startWait(event, response.callback);
+                return checkCallback(response.callback, request).finally(() => {
+                    stopWait(response.callback);
+                    if (request?.modal_selector) { $(request.modal_selector).modal('hide'); }
+                });
+            }
+            else {
+                const switch_uniq = request.module + request.action;
+                switch(switch_uniq) {
+                    case 'eqshow':
+                        if (response) {
+                            g_server = response.server_data;
+                            g_hardware = response.hardware;
+                            g_interfaces = response.interfaces;
+                            g_interfaces.sort((a, b) => a.type.localeCompare(b.type));
+                            g_ips = response.IP;
+                            g_ipmi = response.IPMI;
+                            g_preset = response.preset;
+                            g_location = response.location;
+                            g_tags= response.tags;
+
+                            g_server.power_type = (g_ipmi.model == 'none' || g_ipmi.model == 'j1800' || g_ipmi.model == 'MS_HV') ? 2 : 1;
+
+                            $('#board').show();
+                            reloadServer();
+                            reloadNetwork();
+                            reloadTraffic();
+                        }
+                    break;
+                    case 'isolist_iso':
+                        g_isos = response.iso_images;
+                        if (g_isos.length) {
+                            g_isos.sort();
+                            let iso, html = '<option value="">Select a ISO image</option>';
+                            for (iso of g_isos) { html += '<option value="' + iso.id + '">' + iso.name + '</option>'; }
+                            $('[name="iso_images"]').html(html);
+
+                            if (g_server.mounted_iso_id) {
+                                $('.mounted-iso-line').show();
+                                $('[name="mounted_iso_name"]').text(getIsoName(g_server.mounted_iso_id));
+                            }
+                            else {
+                                $('.mounted-iso-line').hide();
+                                $('[name="mounted_iso_name"]').text('');
+                            }
+                        }
+                        else {
+                            $('[name="iso_images"]').html('<option value="">No available ISO images</option>');
+                            showMessage('error', 'Failed to load ISO list, try again later.');
+                            $('.mounted-iso-line').hide();
+                            $('[name="mounted_iso_name"]').text('');
+                        }
+                    break;
+                    case 'eqget_traffic': {
+                        const modal = Modal.create(switch_uniq);
+                        modal.title = 'Traffic data for a last 45 days';
+                        modal.body = '<p>Standby for traffic data... <i class="fas fa-spin fa-sync"></i>';
+                        modal.show();
+
+                        var html = '<div id="stat"><table><thead><tr><th></th>';
+                        var dates = [];
+                        var daily_traffic_in = {};
+                        var daily_traffic_out = {};
+                        var ip_count = 0;
+                        var old_ip = '';
+                        for (var d of response.traffic) {
+                             if (!dates.includes(d.updated)) {
+                                 dates.push(d.updated);
+                                 daily_traffic_in[d.updated] = 0;
+                                 daily_traffic_out[d.updated] = 0;
+                                 html += '<th>' + d.updated + '</th>';
+                            }
+                            if (d.ip != old_ip) ip_count++;
+                            old_ip = d.ip;
+                            if (d.direction == 1) daily_traffic_in[d.updated] += d.volume; else  daily_traffic_out[d.updated] += d.volume;
+                        }
+                        if (dates.length) {
+                            html += '<th>Total, Gb</th></tr></thead><tbody>';
+                            if (ip_count > 1) {
+                                html += '<tr><th colspan="' + (dates.length + 2) + '" class="sub-set"><span>Subtotal</span></th></tr>';
+                                var row_in = '<th>IN</td>';
+                                var row_out = '<th>OUT</td>';
+                                var d_total_in = 0;
+                                var d_total_out = 0;
+
+                                for (var d of dates) {
+                                    var d_in = 0;
+                                    var d_out = 0;
+                                    if (Object.hasOwn(daily_traffic_in, d)) {
+                                        d_in = daily_traffic_in[d].toFixed(2);
+                                        d_total_in += parseFloat(d_in);
+                                    }
+                                    if (Object.hasOwn(daily_traffic_out, d)) {
+                                        d_out = daily_traffic_out[d].toFixed(2);
+                                        d_total_out += parseFloat(d_out);
+                                    }
+                                    row_in  += '<td>' +  d_in + '</td>';
+                                    row_out += '<td>' + d_out + '</td>';
+                                }
+                                html += '<tr>' + row_in + '<td>' + d_total_in.toFixed(0) + '</td></tr><tr>' + row_out + '<td>' + d_total_out.toFixed(0) + '</td></tr>';
+                            }
+                            var ips = [];
+                            for (var row of response.traffic) if (!ips.includes(row.ip)) {
+                                if (!row.ip) continue;
+                                ips.push(row.ip);
+                                html += '<tr><th colspan="' + (dates.length + 2) + '" class="sub-set"><span>' + row.ip + '</span></th></tr>';
+                                var ip_data = {};
+                                for (var ip of response.traffic) if (ip.ip == row.ip) if (Object.hasOwn(ip_data, ip.updated)) {
+                                    //some data already here, add the rest, mind double records
+                                    if (ip.direction == 1) ip_data[ip.updated].in += ip.volume; else ip_data[ip.updated].out += ip.volume;
+                                } else {
+                                    //new record, add one
+                                    ip_data[ip.updated] = ip;
+                                    if (ip.direction == 1) {
+                                        ip_data[ip.updated].in = ip.volume;
+                                        ip_data[ip.updated].out = 0;
+                                    } else {
+                                        ip_data[ip.updated].out = ip.volume;
+                                        ip_data[ip.updated].in = 0;
+                                    }
+                                }
+                                var total_in = 0;
+                                var total_out = 0;
+                                var row_in = '<th>IN</th>';
+                                var row_out = '<th>OUT</th>';
+                                for (var d of dates) if (Object.hasOwn(ip_data, d)) {
+                                    row_in += '<td>' + ip_data[d].in.toFixed(2) + '</td>';
+                                    row_out += '<td>' + ip_data[d].out.toFixed(2) + '</td>';
+                                    total_in += ip_data[d].in;
+                                    total_out += ip_data[d].out;
+                                } else {
+                                    row_in += '<td>0</td>';
+                                    row_out += '<td>0</td>';
+                                }
+                                html += '<tr>' + row_in + '<td>' + total_in.toFixed(0) + '</td></tr><tr>' + row_out + '<td>' + total_out.toFixed(0) + '</td></tr>';
+                            }
+                            html += '</tbody></table></div>';
+                            modal.body = html;
+                        }
+                        else {
+                            modal.body = '<p>No traffic data available.';
+                        }
+                    }
+                    break;
+                    case 'ipget_traffic': {
+                        const modal = Modal.create(switch_uniq);
+                        modal.title = 'Traffic usage for IP ' + request.ip + ' server ' + request.id;
+                        modal.body = '<div id="trafficChart"></div><div id="trafficTotal"></div>';
+                        google.charts.setOnLoadCallback(function() {
+                            var data = new google.visualization.DataTable();
+                            data.addColumn('string', 'Day');
+                            data.addColumn('number', 'Inbound');
+                            data.addColumn({ type: 'string', role: 'tooltip', 'p': { 'html': true } });
+                            data.addColumn('number', 'Outbound');
+                            data.addColumn({ type: 'string', role: 'tooltip', 'p': { 'html': true } });
+                            var g_data = [];
+                            var out_total = 0;
+                            var in_total = 0;
+                            for (var row of response.traffic) {
+                                var out = [];
+                                out.push(row.time);
+                                if (row.inbound !== null) out.push(parseInt(row.inbound)); else out.push(0);
+                                if (row.outbound !== null) out_total += parseInt(row.outbound);
+                                if (row.inbound !== null) in_total += parseInt(row.inbound);
+                                if (row.outbound > 1000) var outb = parseInt(row.outbound) / 1000 + " Tb"; else var outb = row.outbound + " Gb";
+                                if (row.inbound > 1000) var inb = parseInt(row.inbound) / 1000 + " Tb"; else var inb = row.inbound + " Gb";
+
+                                out.push(row.time + ": " + inb + " in, " + outb + " out");
+                                if (row.outbound !== null) out.push(parseInt(row.outbound)); else out.push(0);
+                                out.push(row.time + ": " + inb + " in, " + outb + " out");
+
+                                g_data.push(out);
+                            }
+
+                            data.addRows(g_data);
+
+                            var options = {
+                                // chart: { title: ip + 'traffic usage for last 30 days', subtitle: 'Gb' },
+                                legend: {position: 'top', alignment: 'end'},
+                                width: '100%',
+                                height: '100%',
+                                isStacked: true,
+                            };
+
+                            var chart = new google.visualization.ColumnChart(document.getElementById('trafficChart'));
+                            chart.draw(data, options);
+
+                            var out_total_tb = out_total / 1024;
+                            var in_total_tb = in_total / 1024;
+                            out_total_tb = out_total_tb.toFixed(2);
+                            in_total_tb = in_total_tb.toFixed(2);
+
+                            if (out_total > 1024) { var outb = out_total_tb + ' Tb'; }
+                            else { var outb = out_total + ' Gb'; }
+                            if (in_total > 1024) { var inb = in_total_tb + ' Tb'; }
+                            else { var inb = in_total + ' Gb'; }
+
+                            $('#trafficTotal').html('<span class="strong small">Total usage for last 30 days</span> <span>' + inb + ' in, ' + outb + ' out</span>');
+                        });
+                        modal.show();
+                    }
+                    break;
+                    case 'ipget_ip':
+                        $(request.target_selector).html(`
+                            <div><span class="label">Network</span> <strong>${response.network}/${response.cidr}</strong></div>
+                            <div><span class="label">Netmask</span> <strong>${response.netmask}</strong></div>
+                            <div><span class="label">Gateway</span> <strong>${response.gateway}</strong></div>
+                            <div><span class="label">Broadcast</span> <strong>${response.broadcast}</strong></div>
+                            <div><span class="label">VLAN</span> <strong>${response.vlan}</strong></div>
+                            <div class="d-none" id="${response.ip.replace(/\./g, "")}_data">IP: ${response.ip}, Mask: {response.netmask}, GW: ${response.gateway}</div>
+                        `);
+                    break;
+                    case 'ipget_ptr':
+                        $(request.target_selector).html(() => {
+                            let ptr, html = '';
+                            for (ptr of response.message) { html += ptr + '\n'; }
+                            return html;
+                        });
+                    break;
+                    case 'ipset_main':
+                        for (let ip of g_ips) {
+                            if (ip.IP == request.ip) {
+                                ip.main_ip = request.main;
+                                ip.description = request.description;
+                                const $ip = $(`.network-address[data-ip="${ip.IP}"]`);
+                                if (ip.main_ip) { $('.is-main', $ip).show(); }
+                                else { $('.is-main', $ip).hide(); }
+                                break;
+                            }
+                        }
+                        showMessage('success', 'Server ' + request.id + ' IP status updated.');
+                    break;
+                    case 'ipupdate_ptr':
+                        showMessage('success', 'Server ' + request.id + ' IP PTR data updated.');
+                    break;
+                    case 'optionslist': {
+                        let html = `<select size="1" id="${id}_ip_license_select"><option value="-1">None</option><option value="-2">Purge license data</option>`;
+                        for (let l of response.list) {
+                            html += `<option value="${l.id }"`;
+                            if (l.id == license_id) { html += ' selected'; }
+                            html += '>';
+                            let found = 0;
+                            for (let tag of l.tags) {
+                                if (tag.tag == 'full_name') {
+                                    html += tag.value;
+                                    found = 1;
+                                    break;
+                                }
+                            }
+                            if (!found) { html += l.name; }
+                            html += '</option>';
+                        }
+                        html += '</select>';
+                        html += `<button type="button" class="btn btn-regular' onclick="updateLicenseDataIP(${id}, '${ip}')">Update</button>`;
+                        $(`#${request.id}_ip_license_options`, request.parent_selector).html(html);
+                    }
+                    break;
+                    case 'jirarequest_pon':
+                    case 'jirarequest_poff':
+                    case 'jirarequest_reboot': {
+                        g_server.active_jira_issue = response.jira_issue;
+                        g_server.active_jira_url = response.jira_url;
+
+                        const modal = Modal.create(switch_uniq);
+                        modal.title = 'Remote Hands request created';
+                        modal.body = 'Remote Hands Request <a href="' + response.jira_url + '">' + response.jira_issue + '</a> was created for server ' + g_server.id + '. Please check your email for updates.';
+                        modal.show();
+                    }
+                    break;
+                }
+                return response;
+            }
+        }
+        else if (response.result == -2) { return login().then(() => doRequest(event)); }
+        else { throw response.error ?? response.message ?? 'error occurred'; }
+    })
+    .catch(message => showMessage('error', 'Failed action ' + request.action + ': ' + message))
+    .finally(() => { stopWait(request_uniq); });
+}
+
+async function checkCallback(callback, request) {
+    return await ajax('eq_callback', { action: 'check', key: callback, api_key: 1 }).then(response => {
+        if (response.result == 'Not ready') {
+            if (--request.attempts > 0) { return new Promise(resolve => { setTimeout(() => { resolve(1); }, request.timeout); }).then(() => checkCallback(response.key, request)); }
+            else { throw 'check attempts are exhausted.'; }
+        }
+        else if (response.result == 'OK') {
+            switch (response.context.action) {
+                case 'on':
+                    updatePowerStatus(true);
+                    showMessage('success', 'Server ' + request.id + ' was powered on.');
+                break;
+                case 'off':
+                    updatePowerStatus(false);
+                    showMessage('success', 'Server ' + request.id + ' was powered off.');
+                break;
+                case 'mount_iso':
+                    showMessage('success', 'Server ' + request.id + ' mounted ISO.');
+                    g_server.mounted_iso_id = request.iso;
+                    $('[name="mounted_iso_name"]').text(getIsoName(g_server.mounted_iso_id));
+                    $('.mounted-iso-line').show();
+                break;
+                case 'umount_iso':
+                    showMessage('success', 'Server ' + request.id + ' unmounted ISO.');
+                    g_server.mounted_iso_id = '';
+                    $('[name="mounted_iso_name"]').text('');
+                    $('.mounted-iso-line').hide();
+                    for (let i in g_tags) {
+                        if (g_tags[i].tag == 'iso') {
+                            g_tags.splice(i, 1);
+                            break;
+                        }
+                    }
+                break;
+                case 'console':
+                    showMessage('success', 'Server ' + request.id + ' console data received');
+                    const blob = new Blob([response.scope], { type: 'text/octet-stream' });
+                    const filename = 'console.vv';
+                    if (window.navigator.msSaveOrOpenBlob) {
+                        window.navigator.msSaveBlob(blob, filename);
+                    }
+                    else {
+                        const elem = document.createElement('a');
+                        elem.href = window.URL.createObjectURL(blob);
+                        elem.download = filename;
+                        document.body.appendChild(elem);
+                        elem.click();
+                        document.body.removeChild(elem);
+                    }
+                break;
+                case 'bootdev_cdrom':
+                    showMessage('success', 'Server ' + request.id + ' CD boot activated.');
+                break;
+                case 'status':
+                    showMessage('success', 'Server ' + request.id + ' status data received');
+                break;
+                case 'reboot':
+                    showMessage('success', 'Server ' + request.id + ' reboot completed');
+                break;
+                case 'novnc':
+                    window.open(response.scope, '_blank');
+                break;
+                case 'get_nmap':
+                    const modal = Modal.create(response.context.action);
+                    modal.title = 'NMAP ' + response.context.ip_ipmi + ' scan results';
+                    modal.body = '<div class="box-line">' + response.scope.trim().replaceAll('\n', '</div><div class="box-line">') + '</div>';
+                    modal.show();
+                break;
+                case 'port_on':
+                    doRequest({ module: 'net', action: 'get_status', port: response.context.interface_id, attempts: 100 });
+                    showMessage('success', 'Server ' + request.id + ' port ' + request.port + ' enabled');
+                break;
+                case 'port_off':
+                    doRequest({ module: 'net', action: 'get_status', port: response.context.interface_id, attempts: 100 });
+                    showMessage('success', 'Server ' + request.id + ' port ' + request.port + ' disabled');
+                break;
+                case 'unblock_ip':
+                    for (let ip of g_ips) {
+                        if (ip.IP == response.context.ip) {
+                            ip.locked = 0;
+                            ip.description = '';
+                            ip.date_block = null;
+                            updateIPStatus(ip);
+                            break;
+                        }
+                    }
+                    showMessage('success', 'Server ' + request.id + ' IP ' + response.context.ip + ' unblocked');
+                break;
+                case 'block_ip':
+                    for (let ip of g_ips) {
+                        if (ip.IP == response.context.ip) {
+                            ip.locked = 1;
+                            ip.description = $('[name="block_reason"]', request.parent_selector).val();
+                            ip.date_block = Math.floor(Date.now() / 1000);
+                            updateIPStatus(ip);
+                            break;
+                        }
+                    }
+                    showMessage('success', 'Server ' + request.id + ' IP ' + response.context.ip + ' blocked');
+                break;
+                case 'get_status':
+                    for (let port of g_interfaces) {
+                        if (port.id == response.context.interface_id) {
+                            const $port = $('.network-interface[data-port="' + port.id + '"]');
+                            const scope = JSON.parse(response.scope);
+                            if (!scope.duplex) { scope.duplex = ''; }
+                            if (scope.status == 'connected') {
+                                if (port.upstream_id > 0 || port.switch_model == 'virtual') {
+                                    $('[name="block_port"]', $port).show();
+                                    $('[name="unblock_port"]', $port).hide();
+                                }
+                                else {
+                                    $('[name="block_port"]', $port).hide();
+                                    $('[name="unblock_port"]', $port).hide();
+                                }
+                                $('[name="interface_status"]', $port).addClass('enabled').removeClass('disabled').text(scope.status + ' ' + scope.duplex + ' '  + scope.speed);
+                            }
+                            else {
+                                $('[name="block_port"]', $port).hide();
+                                $('[name="unblock_port"]', $port).show();
+                                $('[name="interface_status"]', $port).removeClass('enabled').addClass('disabled').text((response.context.block_reason) ? (' Blocked ' + response.context.block_reason) : scope.status);
+                            }
+                            break;
+                        }
+                    }
+                    // showMessage('success', 'Server ' + request.id + ' port ' + request.port + ' status');
+                break;
+                case 'get_vm_statics':
+                    updatePowerStatus(JSON.parse(response.scope).status == 'up');
+                break;
+            }
+        }
+        else if (response.result == 'Fail') {
+            switch (response.context.action) {
+                case 'on':
+                    showMessage('error', 'Server ' + request.id + ' powered on failure: ' + response.scope);
+                break;
+                case 'off':
+                    showMessage('error', 'Server ' + request.id + ' powered off failure: ' + response.scope);
+                break;
+                case 'console':
+                    showMessage('error', 'Server ' + request.id + ' failed to get console data: ' + response.scope);
+                    // if (response.scope.includes('xml')) { // fail if there is a XML
+                        // const parser = new DOMParser();
+                        // const xmlDoc = parser.parseFromString(response.scope, 'text/xml');
+                        // const message = 'Failed to open console: ' + xmlDoc.getElementsByTagName("reason")[0].childNodes[0].nodeValue;
+                        // console.log(message);
+                    // }
+                break;
+                case 'bootdev_cdrom':
+                    showMessage('error', 'Server ' + request.id + ' failed to activate CD boot: ' + response.scope);
+                break;
+                case 'status':
+                    showMessage('error', 'Server ' + request.id + ' failed to retrive status data: ' + response.scope);
+                break;
+                case 'reboot':
+                    showMessage('error', 'Server ' + request.id + ' reboot failure: ' + response.scope);
+                break;
+                case 'novnc':
+                    showMessage('error', 'Server ' + request.id + ' failed to open NOVNC console, support team was notified. Please use regular IPMI passthrough.');
+                break;
+                case 'get_nmap':
+                    showMessage('error', 'NMAP failed for ' + response.context.ip_ipmi + ': ' + response.scope);
+                break;
+                case 'port_on':
+                    showMessage('error', 'Server ' + request.id + ' failed to enable network port ' + request.port + ' : ' + response.scope);
+                break;
+                case 'port_off':
+                    showMessage('error', 'Server ' + request.id + ' failed to disable network port ' + request.port + ' : ' + response.scope);
+                break;
+                case 'block_ip':
+                    showMessage('error', 'Server ' + request.id + ' failed to block IP: ' + response.context.ip);
+                break;
+                case 'unblock_ip':
+                    showMessage('error', 'Server ' + request.id + ' failed to unblock IP: ' + response.context.ip + ': ' + response.scope);
+                break;
+                case 'get_status':
+                    showMessage('error', 'Server ' + request.id + ' network port ' + request.port + ' status is unknown.');
+                break;
+            }
+        }
+        else { throw response.error ?? response.message ?? 'error occurred'; }
+        return response;
+    });
+}
+
+function ajax(module, data) {
+    const url = g_base_url + (g_base_url.at(-1) == '/' ? '' : '/') + module + '.php';
+    console.info(url);
+    console.info(data);
+    return new Promise((resolve, reject) => {
+        $.ajax({
+            url: url,
+            data: data,
+            method : 'POST',
+            dataType: 'json',
+            success: response => { console.info(response); resolve(response); },
+            error: message => { console.error(message); reject(message); },
+        });
+    });
+}
+
+class Modal {
+    #id = '';
+    static #modals = [];
+
+    constructor(uniq) {
+        this.#id = 'modal-' + uniq;
+        $('#modal-template').clone(true).attr('id', this.#id).appendTo('body');
+    }
+
+    static create(uniq) {
+        let m, id = 'modal-' + uniq;
+        for (m of this.#modals) { if (m.#id == id) { return m; } }
+        m = new Modal(uniq);
+        Modal.#modals.push(m);
+        return m;
+    }
+
+    get id() { return this.#id; }
+    get selector() { return '#' + this.#id; }
+    set title(html) { $('.modal-title', this.selector).html(html); }
+    set body(html) { $('.modal-body', this.selector).html(html); }
+    set footer(html) { $('.modal-footer', this.selector).html(html); }
+    show() { $(this.selector).modal('show'); }
+}
+
+function doModal(event) {
+    const modal_uniq = event.target.dataset.modal;
+    switch(modal_uniq) {
+        case 'block-port': {
+            const port = event.target.dataset.port;
+            const modal = Modal.create(modal_uniq);
+            modal.title = 'Disable NIC';
+            modal.body = '<div class="label mb-2">Please enter a reason to block the NIC</div><div><input type="text" class="w-100" name="block_reason"></div>';
+            modal.footer = '<button type="button" class="btn btn-heavy" data-request=\'' + JSON.stringify({ module: 'net', action: 'port_off', port: port, parent_selector: modal.selector, modal_selector: modal.selector }) + '\'>Disable</button><button type="button" class="btn btn-regular" data-dismiss="modal">Cancel</button>';
+            modal.show();
+        }
+        break;
+        case 'block-ip': {
+            const ip = event.target.dataset.ip;
+            const modal = Modal.create(modal_uniq);
+            modal.title = 'Block IP';
+            modal.body = '<div class="label mb-2">Please enter reason to block ' + ip + '</div><div><input type="text" class="w-100" name="block_reason"></div><div class="mt-3"><label><input type="checkbox" name="block_4hours"> Block only for 4 hours</label></div>';
+            modal.footer = '<button type="button" class="btn btn-heavy" data-request=\'' + JSON.stringify({ module: 'net', action: 'block_ip', ip: ip, parent_selector: modal.selector, modal_selector: modal.selector }) + '\'>Block IP</button><button type="button" class="btn btn-regular" data-dismiss="modal">Cancel</button>';
+            modal.show();
+        }
+        break;
+        case 'ip-settings': {
+            const ip = event.target.dataset.ip;
+            const modal = Modal.create(modal_uniq);
+            modal.title = 'IP ' + ip + ' settings';
+            let body = `
+                <div class="row">
+                    <div class="col col-auto"><span class="label">IP description</span></div>
+                    <div class="col"><input type="text" class="w-100 data-ip-description"></div>
+                </div>
+                <div class="box-line" id="ip_data"></div>
+            `;
+            modal.body = body;
+            let footer = '';
+            let description = '';
+            for (let o of g_ips) {
+                if (o.IP == ip) {
+                    description = o.description;
+                    body += `
+                        <div class="box-line"><span class="label">Main interface address</span> <input type="checkbox" id="main_ip" ${o.main_ip ? 'checked' : ''}></div>
+                        <div class="box-line" style='font-size: 10px;'>This IP address will be used as the primary access IP on the server during reinstalls. Changing it doesn't affect your current OS settings. You have to assign additional IP addresses to the server manually.</div>
+                        <div class="box-line"><span class="label">Assigned licenses</span> <span id="${g_login.servers[0]}_ip_license_options"></span></div>
+                        <div class="box-line"><span class="label">DNS PTR record(s), one per line</span><br><textarea id="ip_ptr" rows="3" class="w-100" placeholder="www.domain.tld\nwww.domain2.tld"></textarea></div>
+                    `;
+                    modal.body = body;
+                    footer += `
+                        <button type="button" class="btn btn-heavy" data-request='${JSON.stringify({ module: 'ip', action: 'set_main', ip: ip, parent_selector: modal.selector })}'>Update IP info</button>
+                        <button type="button" class="btn btn-heavy" data-request='${JSON.stringify({ module: 'ip', action: 'update_ptr', ip: ip, parent_selector: modal.selector })}'>Update PTR</button>
+                    `;
+                    if (o.license_id) { doRequest({ module: 'options', action: 'list', option: 'license', ip: ip, license_id: o.license_id, parent_selector: modal.selector }); }
+                    doRequest({ module: 'ip', action: 'get_ptr', ip: ip, target_selector: '#ip_ptr' });
+                    break;
+                }
+            }
+            footer += `<button type="button" class="btn btn-regular" data-dismiss="modal">Close</button>`;
+            modal.body = body;
+            modal.footer = footer;
+            modal.show();
+            $('.data-ip-description', modal.selector).val(description);
+            doRequest({ module: 'ip', action: 'get_ip', ip: ip, target_selector: '#ip_data', result: 'OK' });
+        }
+        break;
+        case 'request_pon':
+        case 'request_poff':
+        case 'request_reboot':
+            if (g_server?.active_jira_issue) {
+                const modal = Modal.create(modal_uniq);
+                modal.title = 'Remote Hands Request is already active';
+                modal.body = 'You already have active RHR <a href="' + g_server.active_jira_url + '" target=_blank>' + g_server.active_jira_issue + '</a> active for server ' + g_server.id + '.  Please continue communication in this ticket.';
+                modal.show();
+            }
+            else {
+                doRequest({ module: 'jira', action: modal_uniq });
+            }
+        break;
+    }
+}
+
+function startWait(event, uniq) {
+    const btn = event?.target;
+    if (btn) {
+        if ((btn.dataset.text ?? '') == '') { btn.dataset.text = btn.innerText; }
+        btn.disabled = true;
+        btn.dataset.waitUniq = uniq;
+        btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> ' + btn.dataset.text;
+    }
+}
+
+function stopWait(uniq) {
+    const btn = document.querySelector('[data-wait-uniq="' + uniq + '"]')
+    if (btn) {
+        btn.disabled = false;
+        btn.dataset.waitUniq = '';
+        btn.innerHTML = btn.dataset.text;
+    }
+}
+
+// type may be success, error, warning or info
+function showMessage(type, message) {
+    const uniq = Date.now();
+    $('body').prepend('<div class="alert alert-' + (type == 'error' ? 'danger' : type) + '" role="alert" data-uniq="' + uniq + '">' + message + '</div>');
+    setTimeout(uniq => { $('.alert[data-uniq="' + uniq + '"]').remove(); }, 15000, uniq);
+}
+
+function showInfo(event, message) {
+    $('<div class="box-info"><i class="fa-solid fa-circle-xmark info-btn info-close"></i><div class="info">' + message + '</div></div>').appendTo($(event.target).closest('.box-body'));
+}
+
+function hideInfo(event) {
+    if (event) { $(event.target).remove(); }
+    else { $('.box-info').remove(); }
+}
+
+function getCookie(name){
+    let str = document.cookie;
+    let p1 = str.indexOf(name + '=');
+    if (p1 == -1) { return; }
+    p1 = str.indexOf('=', p1) + 1;
+    let p2 = str.indexOf(';', p1);
+    if (p2 == -1) { p2 = str.length; }
+    return decodeURIComponent(str.substring(p1, p2));
+}
+
+function setCookie(name, value){
+    switch (typeof(value)) {
+        case 'string': value = encodeURIComponent(value); break;
+        case 'number': value = String(value); break;
+        default: throw 'cookie value must be string or number';
+    }
+    document.cookie = name+'='+value+'; path=/; domain=; samesite=Lax';
+}
+
+function getSessionPrefix() {
+    return 's' + g_api_key.slice(0, 4);
+}
+
+function restoreSession() {
+    g_login = {};
+
+    let str, prefix = getSessionPrefix();
+    for (str of ['token', 'role', 'role_type', 'whmcs_id', 'customer_id', 'token_expire', 'new']) {
+        g_login[str] = getCookie(prefix + str);
+    }
+    let i, n, str2;
+    for (str of ['servers', 'permissions']) {
+        g_login[str] = [];
+        str2 = prefix + str;
+        n = getCookie(str2 + '_count');
+        for (i = 0; i < n; i++) { g_login[str].push(getCookie(str2 + i)); }
+    }
+}
+
+function storeSession(login) {
+    g_login = login;
+
+    let str, prefix = getSessionPrefix();
+    for (str of ['token', 'role', 'role_type', 'whmcs_id', 'customer_id', 'token_expire', 'new']) {
+        setCookie(prefix + str, g_login[str]);
+    }
+    let i, n, str2;
+    for (str of ['servers', 'permissions']) {
+        n = g_login[str].length;
+        str2 = prefix + str;
+        setCookie(str2 + '_count', n);
+        for (i = 0; i < n; i++) { setCookie(str2 + i, g_login[str][i]); }
+    }
+}
+
+function updateIPStatus(ip, $ip) {
+    if (!$ip) {
+        $ip = $('.network-address[data-ip="' + ip.IP + '"]');
+    }
+
+    if (ip.locked == 1) {
+        $('[name="block_ip"]:not(.of-ipmi)', $ip).hide();
+        $('[name="unblock_ip"]:not(.of-ipmi)', $ip).show();
+        $('[name="ip_status"]', $ip).removeClass('enabled').addClass('disabled').text('Blocked on ' + (new Date(ip.date_block * 1000)).toLocaleDateString() + (ip.description ? ('; ' + ip.description) : '')).show();
+    }
+    else {
+        $('[name="block_ip"]:not(.of-ipmi)', $ip).show();
+        $('[name="unblock_ip"]:not(.of-ipmi)', $ip).hide();
+        $('[name="ip_status"]', $ip).addClass('enabled').removeClass('disabled').text('Unblocked').hide();
+    }
+}
+
+function reloadNetwork() {
+    const $interface = $('.network-interface.d-none');
+    const $address = $('.network-address.d-none');
+    const $body = $('#network-body');
+    $body.empty();
+    let port, $port, ip, $ip, j, u, updates = [], $addresses;
+    for (port of g_interfaces) {
+        if ((port.upstream_id > 0 && port.type && port.switch_owner == 'Hostkey') || (port.switch_model == 'virtual')) { // || (typeof port.server_id !== 'undefined' && g_server.hw_owner == 'Hostkey')
+            $port = $interface.clone(true).removeClass('d-none').attr('data-port', port.id);
+            $addresses = $('.network-addresses', $port);
+            $('[name="interface_type"]', $port).text(port.type);
+            $('button', $port).attr('data-port', port.id).hide();
+            if (!port.IsMain) { $('.is-main', $port).hide(); }
+
+            j = 0;
+            for (ip of g_ips) {
+                if (ip.port == port.type) {
+                    $ip = $address.clone(true).removeClass('d-none').attr('data-ip', ip.IP).appendTo($addresses);
+                    $ip.attr('data-port', ip.port);
+                    $('[name="order"]', $ip).text(++j);
+                    $('[name="mac_address"]', $ip).text(ip.MAC);
+                    $('[name="ip_address"]', $ip).text(ip.IP);
+                    if (!ip.main_ip) { $('.is-main', $ip).hide(); }
+                    $('button', $ip).attr('data-ip', ip.IP);
+                    updates.push({ ip: ip, $ip: $ip });
+                }
+            }
+
+            for (ip of g_ipmi.interfaces) {
+                if (ip.port == port.type) {
+                    $ip = $address.clone(true).removeClass('d-none').attr('data-ip', ip.IP).appendTo($addresses);
+                    $ip.attr('data-port', ip.port);
+                    $('[name="order"]', $ip).text(++j);
+                    $('[name="mac_address"]', $ip).text(ip.MAC);
+                    $('[name="ip_address"]', $ip).text(ip.IP);
+                    if (!ip.main_ip) { $('.is-main', $ip).hide(); }
+                    $('button', $ip).attr('data-ip', ip.IP).addClass('of-ipmi');
+                    $('[kind]', $ip).attr('class', (i, className) => className.replace(/(^|\s)d-\S+/g, '')).hide();
+                    $('[kind="ipmi"]', $ip).show();
+                    updates.push({ ip: ip, $ip: $ip });
+                }
+            }
+
+            if (j) {
+                $port.appendTo($body);
+                doRequest({ module: 'net', action: 'get_status', port: port.id, attempts: 100 });
+                for (u of updates) { updateIPStatus(u.ip, u.$ip); }
+            }
+
+            $('[name="ip_count"]', $port).text(j);
+        }
+    }
+}
+
+function reloadTraffic() {
+    let html = '';
+    if (g_server.cost_trafficIN != 0) { html += '<meter value="' + g_server.trafficPeriodIn?.toFixed(0) + '" min="0" max="' + (g_server.limit_trafficIN * 1024) + '"></meter>'; }
+    html += ' ' + g_server.trafficPeriodIn?.toFixed(2);
+    if (g_server.cost_trafficIN != 0) { html += ' of ' + g_server.limit_trafficIN * 1024; }
+    html += ' Gb ';
+    $('[name="inbond"]', '#traffic_usage').html(html);
+
+    html = '';
+    if (g_server.cost_traffic != 0) { html += '<meter value="' + g_server.trafficPeriodOut?.toFixed(0) + '" min="0" max="' + (g_server.limit_traffic * 1024) + '"></meter>'; }
+    html += ' ' + g_server.trafficPeriodOut?.toFixed(2);
+    if (g_server.cost_traffic != 0)  { html += ' of ' + g_server.limit_traffic * 1024; }
+    html += ' Gb ';
+    $('[name="outbond"]', '#traffic_usage').html(html);
+}
+
+function updatePowerStatus(up) {
+    let on = 'power_on';
+    let off = 'power_off';
+    if (g_server.power_type == 2) {
+        on = 'request_pon';
+        off = 'request_poff';
+    }
+
+    if (g_hardware.vm) {
+        if (up) {
+            $('[name="vm_down"]').hide();
+            $('[name="vm_up"]').show();
+            $(`[name="${on}"]`).hide();
+            $(`[name="${off}"]`).show();
+        }
+        else {
+            $('[name="vm_down"]').show();
+            $('[name="vm_up"]').hide();
+            $(`[name="${on}"]`).show();
+            $(`[name="${off}"]`).hide();
+        }
+    }
+    else {
+        if (up) {
+            $('[name="vm_down"]').hide();
+            $('[name="vm_up"]').show();
+            $(`[name="${on}"]`).show();
+            $(`[name="${off}"]`).show();
+        }
+        else {
+            $('[name="vm_down"]').show();
+            $('[name="vm_up"]').hide();
+            $(`[name="${on}"]`).show();
+            $(`[name="${off}"]`).show();
+        }
+    }
+}
+
+function reloadServer() {
+    $('[name="server_name"]').html(g_server.hwconfig);
+    $('[name="server_preset"]').html(g_preset);
+    if (g_preset) { $('#server-preset').show(); }
+    else { $('#server-preset').hide(); }
+    $('[name="server_region"]').html(g_location.dc_location);
+    $('[name="hw_cpu"]').html(`<b>${g_hardware.cpu_name}</b>`);
+    $('[name="hw_ram"]').html(`<b>${g_hardware.ram}Gb</b>`);
+    $('[name="hw_hdd"]').html(`<b>${g_hardware.hdd < 1024 ? (g_hardware.hdd + 'Gb') : ((g_hardware.hdd / 1024) + 'Tb')}</b>`);
+
+    for (let i of [1, 2]) {
+        if (i == g_server.power_type) { $('.power-type-' + i).show(); }
+        else { $('.power-type-' + i).hide(); }
+    }
+
+    if (jQuery.inArray(g_ipmi.model, ['ovirt', 'vgpu', 'dell', 'supermicro_redfish', 'asrock']) !== -1 || jQuery.inArray('mount_iso', Object.keys(g_hardware.tags)) !== -1) {
+        $('#box-iso').show();
+        g_server.mounted_iso_id = '';
+        for (let t of g_tags) {
+            if (t.tag == 'iso') {
+                g_server.mounted_iso_id = t.value;
+                break;
+            }
+        }
+
+        $('.mounted-iso-line').hide();
+        $('[name="mounted_iso_name"]').text('');
+        doRequest({ module: 'iso', action: 'list_iso' });
+    }
+    else { $('#box-iso').hide(); }
+
+    if (g_hardware.vm) { doRequest({ module: 'vm', action: 'load_stats' }); }
+    else { updatePowerStatus(true) }
+}
+
+function getIsoName(iso_id) {
+    let iso = g_isos.find(iso => iso.id == iso_id);
+    if (iso) { return iso.name; }
+    return '';
+}
+
+</script>
+</body>
+</html>
