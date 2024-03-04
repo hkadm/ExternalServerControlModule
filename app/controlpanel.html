@@ -7,15 +7,15 @@
     <title>ControlPanel</title>
     <script>
 
-const g_base_url = '';
+var g_base_url = 'https://panel.hostkey.com';
 
     </script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/4.6.1/css/bootstrap.min.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
 #controlpanel { padding: 1rem 0.5rem; padding-bottom: 10rem; max-width: 640px; }
-@media (min-width: 576px) { #controlpanel { padding: 1rem; } } 
-#controlpanel>#board { display: none; }
+@media (min-width: 576px) { #controlpanel { padding-left: 1rem; padding-right: 1rem; } } 
+#controlpanel>.zone { display: none; }
 #controlpanel .box { margin: 1.5rem 0; }
 #controlpanel .box-head { color: #26272a; font-size: 1.2rem; font-weight: bold; }
 #controlpanel .box-body { margin: 1rem 0 1.5rem 0; }
@@ -23,8 +23,8 @@ const g_base_url = '';
 #controlpanel .box-line { margin: 0.7rem 0; }
 #controlpanel .box-info { position: relative; margin-top: 1rem; }
 #controlpanel .box-info .info { background-color: #fbeaeb; padding: 0.7rem 2rem 0.7rem 1rem; border-radius: 5px; color: #bd2f3d; }
-#controlpanel .box-info .info-btn { position: relative; }
-#controlpanel .box-info .info-close { color: #e05f65; font-size: 1.2rem; cursor: pointer; float: right; top: -9px; left: -7px; }
+#controlpanel .box-info .btn-info { position: relative; }
+#controlpanel .box-info .btn-info-close { color: #e05f65; font-size: 1.2rem; cursor: pointer; float: right; top: -9px; left: -7px; }
 #controlpanel .strong { font-weight: bold; }
 #controlpanel .label:after { content: ':'; }
 #controlpanel button { font-size: 0.92rem; border-radius: 8px; padding: 5px 15px; }
@@ -33,6 +33,7 @@ const g_base_url = '';
 #controlpanel button.btn-heavy:hover { background-color: #6b2ebe; }
 #controlpanel button.btn-regular { color: #9561da; background-color: #f1eafa; }
 #controlpanel button.btn-regular:hover { background-color: #d9c7f1; }
+#controlpanel input[type="text"] { font-size: 0.92rem; color: #444; border-radius: 8px; padding: 7px 10px; width: 100%; background-color: #fff; border: solid 1px #c6ccd2; }
 #controlpanel select { font-size: 0.92rem; color: #aab3bb; border-radius: 8px; padding: 10px 15px; width: 100%; background-color: #fff; border: solid 1px #c6ccd2; }
 #controlpanel select option[value=""] { color: #aab3bb; }
 #controlpanel select option { color: #000; }
@@ -78,7 +79,26 @@ google.charts.load('current', { packages: ['corechart', 'line', 'bar'] });
     </script>
 </head>
 <body id="controlpanel">
-<div id="board">
+<div class="zone without-api-key">
+    <div class="box">
+        <div class="box-head">Server control panel</div>
+        <div class="box-body">
+            <div class="box-line">Enter your server's API-key to get control panel for it</div>
+            <div class="box-line">
+                <div class="row align-items-center">
+                    <div class="col"><input type="text" class="txt-api-key"></div>
+                    <div class="col-auto pl-0 d-none d-sm-inline-block">
+                        <button type="button" class="btn btn-regular btn-api-key">Get control panel</button>
+                    </div>
+                </div>
+            </div>
+            <div class="box-line d-sm-none">
+                <button type="button" class="btn btn-regular w-100 btn-api-key">Get control panel</button>
+            </div>
+        </div>
+    </div>
+</div>
+<div class="zone with-api-key">
     <div class="box">
         <div class="box-head"><span name="server_name"></span></div>
         <div class="box-body">
@@ -217,26 +237,39 @@ var g_isos;
 
 $(document).on('click', '[data-modal]', event => doModal(event));
 $(document).on('click', '[data-request]', event => doRequest(event));
-$(document).on('click', '.info-close', event => hideInfo({ target: event.target.parentElement }));
+$(document).on('click', '.btn-info-close', event => hideInfo({ target: event.target.parentElement }));
+$(document).on('click', '.btn-api-key', () => init($('.txt-api-key').val()));
 
 $(document).ready(function() {
-    g_login = undefined;
-    g_api_key = (new URL(location)).searchParams.get('key');
-    if (g_api_key === null) {
-        showMessage('info', 'API key is not given');
+    const url = new URL(location);
+    g_base_url = url.searchParams.get('base') ?? g_base_url;
+    init(url.searchParams.get('key') ?? '', true);
+});
+
+function init(api_key = '', old_key = false) {
+    g_api_key = api_key;
+    if (g_api_key === '') {
+        $('.zone.without-api-key').show();
+        return;
     }
-    else if (getCookie(getSessionPrefix() + 'token')) {
+
+    $('.zone.without-api-key').hide();
+
+    if (old_key && getCookie(getSessionPrefix() + 'token')) {
         restoreSession();
         doRequest({ module: 'eq', action: 'show' });
+        return;
     }
-    else {
-        login().then(() => doRequest({ module: 'eq', action: 'show' }));
-    }
-});
+
+    login().then(() => doRequest({ module: 'eq', action: 'show' }));
+}
 
 async function login() {
     return await ajax('auth', { action: 'login', key: g_api_key }).then(response => {
-        if (response?.error) { showMessage('error', response.error); }
+        if (response?.error) {
+            showMessage('error', response.error);
+            $('.zone.without-api-key').show();
+        }
         else { storeSession(response.result); }
         return response;
     });
@@ -320,10 +353,8 @@ async function doRequest(event) {
                             g_preset = response.preset;
                             g_location = response.location;
                             g_tags= response.tags;
-
                             g_server.power_type = (g_ipmi.model == 'none' || g_ipmi.model == 'j1800' || g_ipmi.model == 'MS_HV') ? 2 : 1;
-
-                            $('#board').show();
+                            $('.zone.with-api-key').show();
                             reloadServer();
                             reloadNetwork();
                             reloadTraffic();
@@ -336,21 +367,13 @@ async function doRequest(event) {
                             let iso, html = '<option value="">Select a ISO image</option>';
                             for (iso of g_isos) { html += '<option value="' + iso.id + '">' + iso.name + '</option>'; }
                             $('[name="iso_images"]').html(html);
-
-                            if (g_server.mounted_iso_id) {
-                                $('.mounted-iso-line').show();
-                                $('[name="mounted_iso_name"]').text(getIsoName(g_server.mounted_iso_id));
-                            }
-                            else {
-                                $('.mounted-iso-line').hide();
-                                $('[name="mounted_iso_name"]').text('');
-                            }
+                            const tag = g_tags.find(t => t.tag == 'iso');
+                            updateIsoUI(tag ? tag.value : '');
                         }
                         else {
                             $('[name="iso_images"]').html('<option value="">No available ISO images</option>');
+                            updateIsoUI();
                             showMessage('error', 'Failed to load ISO list, try again later.');
-                            $('.mounted-iso-line').hide();
-                            $('[name="mounted_iso_name"]').text('');
                         }
                     break;
                     case 'eqget_traffic': {
@@ -598,15 +621,12 @@ async function checkCallback(callback, request) {
                 break;
                 case 'mount_iso':
                     showMessage('success', 'Server ' + request.id + ' mounted ISO.');
-                    g_server.mounted_iso_id = request.iso;
-                    $('[name="mounted_iso_name"]').text(getIsoName(g_server.mounted_iso_id));
-                    $('.mounted-iso-line').show();
+                    updateIsoUI(request.iso);
                 break;
                 case 'umount_iso':
                     showMessage('success', 'Server ' + request.id + ' unmounted ISO.');
-                    g_server.mounted_iso_id = '';
-                    $('[name="mounted_iso_name"]').text('');
-                    $('.mounted-iso-line').hide();
+                    updateIsoUI();
+
                     for (let i in g_tags) {
                         if (g_tags[i].tag == 'iso') {
                             g_tags.splice(i, 1);
@@ -814,7 +834,7 @@ function doModal(event) {
             const port = event.target.dataset.port;
             const modal = Modal.create(modal_uniq);
             modal.title = 'Disable NIC';
-            modal.body = '<div class="label mb-2">Please enter a reason to block the NIC</div><div><input type="text" class="w-100" name="block_reason"></div>';
+            modal.body = '<div class="label mb-2">Please enter a reason to block the NIC</div><div><input type="text" name="block_reason"></div>';
             modal.footer = '<button type="button" class="btn btn-heavy" data-request=\'' + JSON.stringify({ module: 'net', action: 'port_off', port: port, parent_selector: modal.selector, modal_selector: modal.selector }) + '\'>Disable</button><button type="button" class="btn btn-regular" data-dismiss="modal">Cancel</button>';
             modal.show();
         }
@@ -823,7 +843,7 @@ function doModal(event) {
             const ip = event.target.dataset.ip;
             const modal = Modal.create(modal_uniq);
             modal.title = 'Block IP';
-            modal.body = '<div class="label mb-2">Please enter reason to block ' + ip + '</div><div><input type="text" class="w-100" name="block_reason"></div><div class="mt-3"><label><input type="checkbox" name="block_4hours"> Block only for 4 hours</label></div>';
+            modal.body = '<div class="label mb-2">Please enter reason to block ' + ip + '</div><div><input type="text" name="block_reason"></div><div class="mt-3"><label><input type="checkbox" name="block_4hours"> Block only for 4 hours</label></div>';
             modal.footer = '<button type="button" class="btn btn-heavy" data-request=\'' + JSON.stringify({ module: 'net', action: 'block_ip', ip: ip, parent_selector: modal.selector, modal_selector: modal.selector }) + '\'>Block IP</button><button type="button" class="btn btn-regular" data-dismiss="modal">Cancel</button>';
             modal.show();
         }
@@ -835,7 +855,7 @@ function doModal(event) {
             let body = `
                 <div class="row">
                     <div class="col col-auto"><span class="label">IP description</span></div>
-                    <div class="col"><input type="text" class="w-100 data-ip-description"></div>
+                    <div class="col"><input type="text" class="data-ip-description"></div>
                 </div>
                 <div class="box-line" id="ip_data"></div>
             `;
@@ -912,7 +932,7 @@ function showMessage(type, message) {
 }
 
 function showInfo(event, message) {
-    $('<div class="box-info"><i class="fa-solid fa-circle-xmark info-btn info-close"></i><div class="info">' + message + '</div></div>').appendTo($(event.target).closest('.box-body'));
+    $('<div class="box-info"><i class="fa-solid fa-circle-xmark btn-info btn-info-close"></i><div class="info">' + message + '</div></div>').appendTo($(event.target).closest('.box-body'));
 }
 
 function hideInfo(event) {
@@ -1117,16 +1137,7 @@ function reloadServer() {
 
     if (jQuery.inArray(g_ipmi.model, ['ovirt', 'vgpu', 'dell', 'supermicro_redfish', 'asrock']) !== -1 || jQuery.inArray('mount_iso', Object.keys(g_hardware.tags)) !== -1) {
         $('#box-iso').show();
-        g_server.mounted_iso_id = '';
-        for (let t of g_tags) {
-            if (t.tag == 'iso') {
-                g_server.mounted_iso_id = t.value;
-                break;
-            }
-        }
-
-        $('.mounted-iso-line').hide();
-        $('[name="mounted_iso_name"]').text('');
+        updateIsoUI();
         doRequest({ module: 'iso', action: 'list_iso' });
     }
     else { $('#box-iso').hide(); }
@@ -1135,10 +1146,15 @@ function reloadServer() {
     else { updatePowerStatus(true) }
 }
 
-function getIsoName(iso_id) {
-    let iso = g_isos.find(iso => iso.id == iso_id);
-    if (iso) { return iso.name; }
-    return '';
+function updateIsoUI(iso_id = '') {
+    let str = '';
+    if (iso_id) {
+        $('.mounted-iso-line').show();
+        const iso = g_isos.find(i => i.id == iso_id);
+        if (iso) { str = iso.name ; }
+    }
+    else { $('.mounted-iso-line').hide(); }
+    $('[name="mounted_iso_name"]').text(str);
 }
 
 </script>
