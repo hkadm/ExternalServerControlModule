@@ -7,14 +7,14 @@
     <title>ControlPanel</title>
     <script>
 
-var g_base_url = 'https://panel.hostkey.com';
+var g_base_url = '';
 
     </script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/4.6.1/css/bootstrap.min.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
 #controlpanel { padding: 1rem 0.5rem; padding-bottom: 10rem; max-width: 640px; }
-@media (min-width: 576px) { #controlpanel { padding-left: 1rem; padding-right: 1rem; } } 
+@media (min-width: 576px) { #controlpanel { padding-left: 1rem; padding-right: 1rem; } }
 #controlpanel>.zone { display: none; }
 #controlpanel .box { margin: 1.5rem 0; }
 #controlpanel .box-head { color: #26272a; font-size: 1.2rem; font-weight: bold; }
@@ -238,15 +238,15 @@ var g_isos;
 $(document).on('click', '[data-modal]', event => doModal(event));
 $(document).on('click', '[data-request]', event => doRequest(event));
 $(document).on('click', '.btn-info-close', event => hideInfo({ target: event.target.parentElement }));
-$(document).on('click', '.btn-api-key', () => init($('.txt-api-key').val()));
+$(document).on('click', '.btn-api-key', () => { const url = new URL(location); url.searchParams.set('key', $('.txt-api-key').val().trim()); window.location.search = url.searchParams; });
 
 $(document).ready(function() {
     const url = new URL(location);
     g_base_url = url.searchParams.get('base') ?? g_base_url;
-    init(url.searchParams.get('key') ?? '', true);
+    init(url.searchParams.get('key') ?? '');
 });
 
-function init(api_key = '', old_key = false) {
+function init(api_key) {
     g_api_key = api_key;
     if (g_api_key === '') {
         $('.zone.without-api-key').show();
@@ -255,7 +255,7 @@ function init(api_key = '', old_key = false) {
 
     $('.zone.without-api-key').hide();
 
-    if (old_key && getCookie(getSessionPrefix() + 'token')) {
+    if (getCookie(getSessionPrefix() + 'token')) {
         restoreSession();
         doRequest({ module: 'eq', action: 'show' });
         return;
@@ -288,7 +288,13 @@ async function doRequest(event) {
     request.id = g_login.servers[0];
     request.api_key = 1;
 
-    switch(request.action) {
+    switch (request.action) {
+        case 'show':
+            if (!request?.id) {
+                showMessage('error', 'There is no such server');
+                return;
+            }
+        break;
         case 'mount_iso':
             request.iso = $('[name="iso_images"]').val();
             if ((request.iso ?? '') == '') {
@@ -341,7 +347,7 @@ async function doRequest(event) {
             }
             else {
                 const switch_uniq = request.module + request.action;
-                switch(switch_uniq) {
+                switch (switch_uniq) {
                     case 'eqshow':
                         if (response) {
                             g_server = response.server_data;
@@ -787,17 +793,17 @@ async function checkCallback(callback, request) {
 }
 
 function ajax(module, data) {
-    const url = g_base_url + (g_base_url.at(-1) == '/' ? '' : '/') + module + '.php';
-    console.info(url);
-    console.info(data);
+    let url = g_base_url === '' ? 'https://invapi.hostkey.com' : g_base_url;
+    url += (url.at(-1) == '/' ? '' : '/') + module + '.php';
+
     return new Promise((resolve, reject) => {
         $.ajax({
             url: url,
             data: data,
             method : 'POST',
             dataType: 'json',
-            success: response => { console.info(response); resolve(response); },
-            error: message => { console.error(message); reject(message); },
+            success: response => { resolve(response); },
+            error: message => { reject(message); },
         });
     });
 }
@@ -829,7 +835,7 @@ class Modal {
 
 function doModal(event) {
     const modal_uniq = event.target.dataset.modal;
-    switch(modal_uniq) {
+    switch (modal_uniq) {
         case 'block-port': {
             const port = event.target.dataset.port;
             const modal = Modal.create(modal_uniq);
@@ -911,7 +917,7 @@ function startWait(event, uniq) {
         if ((btn.dataset.text ?? '') == '') { btn.dataset.text = btn.innerText; }
         btn.disabled = true;
         btn.dataset.waitUniq = uniq;
-        btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> ' + btn.dataset.text;
+        btn.innerHTML = '<i class="fa fa-spinner fa-spin"></i> ' + btn.dataset.text;
     }
 }
 
@@ -951,10 +957,10 @@ function getCookie(name){
 }
 
 function setCookie(name, value){
-    switch (typeof(value)) {
+    switch (typeof value) {
         case 'string': value = encodeURIComponent(value); break;
         case 'number': value = String(value); break;
-        default: throw 'cookie value must be string or number';
+        default: return;
     }
     document.cookie = name+'='+value+'; path=/; domain=; samesite=Lax';
 }
@@ -963,35 +969,42 @@ function getSessionPrefix() {
     return 's' + g_api_key.slice(0, 4);
 }
 
-function restoreSession() {
-    g_login = {};
-
-    let str, prefix = getSessionPrefix();
-    for (str of ['token', 'role', 'role_type', 'whmcs_id', 'customer_id', 'token_expire', 'new']) {
-        g_login[str] = getCookie(prefix + str);
-    }
-    let i, n, str2;
-    for (str of ['servers', 'permissions']) {
-        g_login[str] = [];
-        str2 = prefix + str;
-        n = getCookie(str2 + '_count');
-        for (i = 0; i < n; i++) { g_login[str].push(getCookie(str2 + i)); }
-    }
-}
-
 function storeSession(login) {
     g_login = login;
+    if (g_base_url === '') { g_base_url = g_login.invapi ?? ''; }
 
     let str, prefix = getSessionPrefix();
-    for (str of ['token', 'role', 'role_type', 'whmcs_id', 'customer_id', 'token_expire', 'new']) {
+    setCookie(prefix + 'base', g_base_url);
+
+    for (str of ['token', 'role', 'role_type', 'whmcs_id', 'customer_id', 'token_expire', 'new', 'invapi']) {
         setCookie(prefix + str, g_login[str]);
     }
+
     let i, n, str2;
     for (str of ['servers', 'permissions']) {
         n = g_login[str].length;
         str2 = prefix + str;
         setCookie(str2 + '_count', n);
         for (i = 0; i < n; i++) { setCookie(str2 + i, g_login[str][i]); }
+    }
+}
+
+function restoreSession() {
+    g_login = {};
+
+    let str, prefix = getSessionPrefix();
+    g_base_url = setCookie(prefix + 'base') ?? '';
+
+    for (str of ['token', 'role', 'role_type', 'whmcs_id', 'customer_id', 'token_expire', 'new', 'invapi']) {
+        g_login[str] = getCookie(prefix + str);
+    }
+
+    let i, n, str2;
+    for (str of ['servers', 'permissions']) {
+        g_login[str] = [];
+        str2 = prefix + str;
+        n = getCookie(str2 + '_count');
+        for (i = 0; i < n; i++) { g_login[str].push(getCookie(str2 + i)); }
     }
 }
 
