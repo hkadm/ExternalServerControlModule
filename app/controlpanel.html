@@ -14,7 +14,7 @@ var g_base_url = '';
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
 #controlpanel { padding: 1rem 0.5rem; padding-bottom: 10rem; max-width: 640px; }
-@media (min-width: 576px) { #controlpanel { padding-left: 1rem; padding-right: 1rem; } }
+@media (min-width: 576px) { #controlpanel { padding-left: 1rem; padding-right: 1rem; } } 
 #controlpanel>.zone { display: none; }
 #controlpanel .box { margin: 1.5rem 0; }
 #controlpanel .box-head { color: #26272a; font-size: 1.2rem; font-weight: bold; }
@@ -993,7 +993,7 @@ function restoreSession() {
     g_login = {};
 
     let str, prefix = getSessionPrefix();
-    g_base_url = setCookie(prefix + 'base') ?? '';
+    g_base_url = getCookie(prefix + 'base') ?? '';
 
     for (str of ['token', 'role', 'role_type', 'whmcs_id', 'customer_id', 'token_expire', 'new', 'invapi']) {
         g_login[str] = getCookie(prefix + str);
