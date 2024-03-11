@@ -257,8 +257,13 @@ function init(api_key) {
 
     if (getCookie(getSessionPrefix() + 'token')) {
         restoreSession();
-        doRequest({ module: 'eq', action: 'show' });
-        return;
+        if (g_login?.servers?.length ?? 0) {
+            doRequest({ module: 'eq', action: 'show' });
+            return;
+        }
+
+        setCookie(getSessionPrefix() + 'token', '')
+        g_login = {};
     }
 
     login().then(() => doRequest({ module: 'eq', action: 'show' }));
@@ -969,26 +974,6 @@ function getSessionPrefix() {
     return 's' + g_api_key.slice(0, 4);
 }
 
-function storeSession(login) {
-    g_login = login;
-    if (g_base_url === '') { g_base_url = g_login.invapi ?? ''; }
-
-    let str, prefix = getSessionPrefix();
-    setCookie(prefix + 'base', g_base_url);
-
-    for (str of ['token', 'role', 'role_type', 'whmcs_id', 'customer_id', 'token_expire', 'new', 'invapi']) {
-        setCookie(prefix + str, g_login[str]);
-    }
-
-    let i, n, str2;
-    for (str of ['servers', 'permissions']) {
-        n = g_login[str].length;
-        str2 = prefix + str;
-        setCookie(str2 + '_count', n);
-        for (i = 0; i < n; i++) { setCookie(str2 + i, g_login[str][i]); }
-    }
-}
-
 function restoreSession() {
     g_login = {};
 
@@ -1005,6 +990,28 @@ function restoreSession() {
         str2 = prefix + str;
         n = getCookie(str2 + '_count');
         for (i = 0; i < n; i++) { g_login[str].push(getCookie(str2 + i)); }
+    }
+}
+
+function storeSession(login) {
+    if (!login?.servers?.length ?? 0) { return; }
+
+    g_login = login;
+    if (g_base_url === '') { g_base_url = g_login.invapi ?? ''; }
+
+    let str, prefix = getSessionPrefix();
+    setCookie(prefix + 'base', g_base_url);
+
+    for (str of ['token', 'role', 'role_type', 'whmcs_id', 'customer_id', 'token_expire', 'new', 'invapi']) {
+        setCookie(prefix + str, g_login[str]);
+    }
+
+    let i, n, str2;
+    for (str of ['servers', 'permissions']) {
+        n = g_login[str].length;
+        str2 = prefix + str;
+        setCookie(str2 + '_count', n);
+        for (i = 0; i < n; i++) { setCookie(str2 + i, g_login[str][i]); }
     }
 }
 
