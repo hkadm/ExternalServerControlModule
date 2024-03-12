@@ -257,13 +257,10 @@ function init(api_key) {
 
     if (getCookie(getSessionPrefix() + 'token')) {
         restoreSession();
-        if (g_login?.servers?.length ?? 0) {
+        if (g_login.servers.length) {
             doRequest({ module: 'eq', action: 'show' });
             return;
         }
-
-        setCookie(getSessionPrefix() + 'token', '')
-        g_login = {};
     }
 
     login().then(() => doRequest({ module: 'eq', action: 'show' }));
@@ -276,13 +273,13 @@ async function login() {
             $('.zone.without-api-key').show();
         }
         else { storeSession(response.result); }
-        return response;
+        return g_login.servers.length ? response : login();
     });
 }
 
 async function doRequest(event) {
     hideInfo();
-
+    
     const request = event?.target ? JSON.parse(event.target.dataset.request) : event;
     if (!request) { return; }
     if (!request?.module) { showInfo(event, 'Module is not given'); return; }
@@ -798,7 +795,7 @@ async function checkCallback(callback, request) {
 }
 
 function ajax(module, data) {
-    let url = g_base_url === '' ? 'https://invapi.hostkey.com' : g_base_url;
+    let url = 'https://' + (g_base_url === '' ? 'invapi.hostkey.com' : g_base_url);
     url += (url.at(-1) == '/' ? '' : '/') + module + '.php';
 
     return new Promise((resolve, reject) => {
@@ -974,28 +971,7 @@ function getSessionPrefix() {
     return 's' + g_api_key.slice(0, 4);
 }
 
-function restoreSession() {
-    g_login = {};
-
-    let str, prefix = getSessionPrefix();
-    g_base_url = getCookie(prefix + 'base') ?? '';
-
-    for (str of ['token', 'role', 'role_type', 'whmcs_id', 'customer_id', 'token_expire', 'new', 'invapi']) {
-        g_login[str] = getCookie(prefix + str);
-    }
-
-    let i, n, str2;
-    for (str of ['servers', 'permissions']) {
-        g_login[str] = [];
-        str2 = prefix + str;
-        n = getCookie(str2 + '_count');
-        for (i = 0; i < n; i++) { g_login[str].push(getCookie(str2 + i)); }
-    }
-}
-
 function storeSession(login) {
-    if (!login?.servers?.length ?? 0) { return; }
-
     g_login = login;
     if (g_base_url === '') { g_base_url = g_login.invapi ?? ''; }
 
@@ -1012,6 +988,25 @@ function storeSession(login) {
         str2 = prefix + str;
         setCookie(str2 + '_count', n);
         for (i = 0; i < n; i++) { setCookie(str2 + i, g_login[str][i]); }
+    }
+}
+
+function restoreSession() {
+    g_login = {};
+
+    let str, prefix = getSessionPrefix();
+    g_base_url = getCookie(prefix + 'base') ?? '';
+
+    for (str of ['token', 'role', 'role_type', 'whmcs_id', 'customer_id', 'token_expire', 'new', 'invapi']) {
+        g_login[str] = getCookie(prefix + str);
+    }
+
+    let i, n, str2;
+    for (str of ['servers', 'permissions']) {
+        g_login[str] = [];
+        str2 = prefix + str;
+        n = getCookie(str2 + '_count');
+        for (i = 0; i < n; i++) { g_login[str].push(getCookie(str2 + i)); }
     }
 }
 
