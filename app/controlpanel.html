@@ -7,7 +7,7 @@
     <title>ControlPanel</title>
     <script>
 
-var g_base_url = '';
+var g_base_url = (new URL(location)).host; //redefine it with your local panel URL, if needed
 
     </script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/4.6.1/css/bootstrap.min.css">
@@ -242,7 +242,7 @@ $(document).on('click', '.btn-api-key', () => { const url = new URL(location); u
 
 $(document).ready(function() {
     const url = new URL(location);
-    g_base_url = url.searchParams.get('base') ?? g_base_url;
+    g_base_url = url.searchParams.get('base') ?? g_base_url; // if you need to overide API URL and it different from your http://xxxx.com/controlpanel.html, submit it as ?base=your.api.hostname.com
     init(url.searchParams.get('key') ?? '');
 });
 
@@ -267,7 +267,7 @@ function init(api_key) {
 }
 
 async function login() {
-    return await ajax('auth', { action: 'login', key: g_api_key }).then(response => {
+    return await ajax('auth', { action: 'login', key: g_api_key, base: g_base_url }).then(response => {
         if (response?.error) {
             showMessage('error', response.error);
             $('.zone.without-api-key').show();
