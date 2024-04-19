@@ -327,7 +327,7 @@ async function doRequest(event) {
         break;
         case 'set_main':
             request.main = $('#main_ip', request.parent_selector).prop('checked') ? 1 : 0;
-            request.description = $('.data-ip-description', request.parent_selector).val().trim();
+            request.description = '';
         break;
         case 'update_ptr':
             request.ptr = $('#ip_ptr', request.parent_selector).val().trim();
@@ -877,19 +877,11 @@ function doModal(event) {
             const ip = event.target.dataset.ip;
             const modal = Modal.create(modal_uniq);
             modal.title = 'IP ' + ip + ' settings';
-            let body = `
-                <div class="row">
-                    <div class="col col-auto"><span class="label">IP description</span></div>
-                    <div class="col"><input type="text" class="data-ip-description"></div>
-                </div>
-                <div class="box-line" id="ip_data"></div>
-            `;
+            let body = `<div class="box-line" id="ip_data"></div>`;
             modal.body = body;
             let footer = '';
-            let description = '';
             for (let o of g_ips) {
                 if (o.IP == ip) {
-                    description = o.description;
                     body += `
                         <div class="box-line"><span class="label">Main interface address</span> <input type="checkbox" id="main_ip" ${o.main_ip ? 'checked' : ''}></div>
                         <div class="box-line" style='font-size: 10px;'>This IP address will be used as the primary access IP on the server during reinstalls. Changing it doesn't affect your current OS settings. You have to assign additional IP addresses to the server manually.</div>
@@ -910,7 +902,6 @@ function doModal(event) {
             modal.body = body;
             modal.footer = footer;
             modal.show();
-            $('.data-ip-description', modal.selector).val(description);
             doRequest({ module: 'ip', action: 'get_ip', ip: ip, target_selector: '#ip_data' });
         }
         break;
