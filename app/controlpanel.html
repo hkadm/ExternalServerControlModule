@@ -14,11 +14,11 @@ var g_base_url = (new URL(location)).host; // redefine it with your local panel 
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
 #controlpanel { padding: 1rem 0.5rem; padding-bottom: 10rem; max-width: 710px; }
-@media (min-width: 576px) { #controlpanel { padding-left: 1rem; padding-right: 1rem; } }
+@media (min-width: 576px) { #controlpanel { padding-left: 1rem; padding-right: 1rem; } } 
 #controlpanel>.zone { display: none; }
-#controlpanel .box { margin: 1.5rem 0; }
+#controlpanel .box { margin: 2rem 0; }
 #controlpanel .box-head { color: #26272a; font-size: 1.2rem; font-weight: bold; }
-#controlpanel .box-body { margin: 1rem 0 1.5rem 0; }
+#controlpanel .box-body { margin: 0 0 1.5rem 0; }
 #controlpanel .box-area { margin: 1rem 0; padding: 0 0.8rem; background-color: #f7f8fa; border: solid 1px #e3e6e8; border-radius: 8px; }
 #controlpanel .box-line { margin: 0.7rem 0; }
 #controlpanel .box-info { position: relative; margin-top: 1rem; }
@@ -45,7 +45,7 @@ var g_base_url = (new URL(location)).host; // redefine it with your local panel 
 #controlpanel [name="interface_type"], [name="ip_address"] { font-weight: bold; }
 #controlpanel [name="interface_status"] { text-transform: capitalize; }
 #controlpanel [name="server_name"] { font-size: 1.4rem; }
-#controlpanel .text-status { font-size: 0.8rem; border-radius: 8px; padding: 6px 12px; margin-right: 3px; }
+#controlpanel .text-status { font-size: 0.8rem; border-radius: 8px; padding: 2px 5px; margin-right: 3px; }
 #controlpanel .text-status.enabled { background-color: #d3f8ed; }
 #controlpanel .text-status.disabled { background-color: #f7d4d7; }
 #controlpanel .vm-status:not(.initial) { display: none; }
@@ -94,6 +94,17 @@ google.charts.load('current', { packages: ['corechart', 'line', 'bar'] });
             </div>
             <div class="box-line d-sm-none">
                 <button type="button" class="btn btn-regular w-100 btn-api-key">Get control panel</button>
+            </div>
+            <div class="box-line d-none d-sm-block">
+                <div class="row align-items-center">
+                    <div class="col"><input type="text" class="invisible"></div>
+                    <div class="col-auto pl-0 d-none d-sm-inline-block">
+                        <button type="button" class="btn btn-heavy btn-try">Try control panel</button>
+                    </div>
+                </div>
+            </div>
+            <div class="box-line d-sm-none">
+                <button type="button" class="btn btn-heavy w-100 btn-try">Try control panel</button>
             </div>
         </div>
     </div>
@@ -212,7 +223,7 @@ google.charts.load('current', { packages: ['corechart', 'line', 'bar'] });
         <div class="modal-content">
             <div class="modal-header border-0">
                 <h5 class="modal-title font-weight-bold"></h5>
-                <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close" style="font-size: 1.5rem !important;"><span aria-hidden="true">&times;</span></button>
             </div>
             <div class="modal-body"></div>
             <div class="modal-footer border-0 justify-content-center"><button type="button" class="btn btn-heavy" data-dismiss="modal">Close</button></div>
@@ -232,16 +243,25 @@ var g_preset;
 var g_location;
 var g_tags;
 var g_isos;
+var g_try;
 
 $(document).on('click', '[data-modal]', event => doModal(event));
 $(document).on('click', '[data-request]', event => doRequest(event));
 $(document).on('click', '.btn-info-close', event => hideInfo({ target: event.target.parentElement }));
 $(document).on('click', '.btn-api-key', () => { const url = new URL(location); url.searchParams.set('key', $('.txt-api-key').val().trim()); window.location.search = url.searchParams; });
+$(document).on('click', '.btn-try', () => { const url = new URL(location); url.searchParams.set('try', 'try'); window.location.search = url.searchParams; });
 
 $(document).ready(function() {
     const url = new URL(location);
-    g_base_url = url.searchParams.get('base') ?? g_base_url; // if you need to overide API URL and it different from your http://xxxx.com/controlpanel.html, submit it as ?base=your.api.hostname.com
-    init(url.searchParams.get('key') ?? '');
+    g_try = url.searchParams.get('try') ?? false;
+    if (g_try) {
+        g_base_url = 'invapi-stage.hostkey.com';
+        init('9a55008895feec93-e3941b1b3a30188b');
+    }
+    else {
+        g_base_url = url.searchParams.get('base') ?? g_base_url; // if you need to overide API URL and it different from your http://xxxx.com/controlpanel.html, submit it as ?base=your.api.hostname.com
+        init(url.searchParams.get('key') ?? '');
+    }
 });
 
 function init(api_key) {
@@ -276,6 +296,8 @@ async function login() {
 }
 
 async function doRequest(event) {
+    if (g_try && event?.target) { return; }
+
     hideInfo();
 
     const request = event?.target ? JSON.parse(event.target.dataset.request) : event;
@@ -853,6 +875,8 @@ class Modal {
 }
 
 function doModal(event) {
+    if (g_try) { return; }
+
     const modal_uniq = event.target.dataset.modal;
     switch (modal_uniq) {
         case 'block-port': {
