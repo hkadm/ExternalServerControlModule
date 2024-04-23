@@ -95,17 +95,6 @@ google.charts.load('current', { packages: ['corechart', 'line', 'bar'] });
             <div class="box-line d-sm-none">
                 <button type="button" class="btn btn-regular w-100 btn-api-key">Get control panel</button>
             </div>
-            <div class="box-line d-none d-sm-block">
-                <div class="row align-items-center">
-                    <div class="col"><input type="text" class="invisible"></div>
-                    <div class="col-auto pl-0 d-none d-sm-inline-block">
-                        <button type="button" class="btn btn-heavy btn-try">Try control panel</button>
-                    </div>
-                </div>
-            </div>
-            <div class="box-line d-sm-none">
-                <button type="button" class="btn btn-heavy w-100 btn-try">Try control panel</button>
-            </div>
         </div>
     </div>
 </div>
@@ -243,22 +232,26 @@ var g_preset;
 var g_location;
 var g_tags;
 var g_isos;
-var g_try;
+var g_demo;
 
 $(document).on('click', '[data-modal]', event => doModal(event));
 $(document).on('click', '[data-request]', event => doRequest(event));
 $(document).on('click', '.btn-info-close', event => hideInfo({ target: event.target.parentElement }));
 $(document).on('click', '.btn-api-key', () => { const url = new URL(location); url.searchParams.set('key', $('.txt-api-key').val().trim()); window.location.search = url.searchParams; });
-$(document).on('click', '.btn-try', () => { const url = new URL(location); url.searchParams.set('try', 'try'); window.location.search = url.searchParams; });
 
 $(document).ready(function() {
     const url = new URL(location);
-    g_try = url.searchParams.get('try') ?? false;
-    if (g_try) {
-        g_base_url = 'invapi-stage.hostkey.com';
-        init('9a55008895feec93-e3941b1b3a30188b');
+    g_demo = url.searchParams.get('demo');
+    if (g_demo === 'com') {
+        g_base_url = 'invapi.hostkey.com';
+        init('f5ee96748613810c-471d93998e49e654');
+    }
+    else if (g_demo === 'ru') {
+        g_base_url = 'invapi.hostkey.ru';
+        init('3501770a5d2e5339-debec2199152b649');
     }
     else {
+        g_demo = false;
         g_base_url = url.searchParams.get('base') ?? g_base_url; // if you need to overide API URL and it different from your http://xxxx.com/controlpanel.html, submit it as ?base=your.api.hostname.com
         init(url.searchParams.get('key') ?? '');
     }
@@ -296,7 +289,7 @@ async function login() {
 }
 
 async function doRequest(event) {
-    if (g_try && event?.target) { return; }
+    if (g_demo && event?.target) { return; }
 
     hideInfo();
 
@@ -875,7 +868,7 @@ class Modal {
 }
 
 function doModal(event) {
-    if (g_try) { return; }
+    if (g_demo) { return; }
 
     const modal_uniq = event.target.dataset.modal;
     switch (modal_uniq) {
