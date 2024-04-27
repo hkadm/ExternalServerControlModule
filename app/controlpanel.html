@@ -23,8 +23,8 @@ var g_base_url = (new URL(location)).host; // redefine it with your local panel 
 #controlpanel .box-line { margin: 0.7rem 0; }
 #controlpanel .box-info { position: relative; margin-top: 1rem; }
 #controlpanel .box-info .info { background-color: #fbeaeb; padding: 0.7rem 2rem 0.7rem 1rem; border-radius: 5px; color: #bd2f3d; }
-#controlpanel .box-info .btn-info { position: relative; }
-#controlpanel .box-info .btn-info-close { color: #e05f65; font-size: 1.2rem; cursor: pointer; float: right; top: -9px; left: -7px; }
+#controlpanel .box-info .btn-inf { position: relative; }
+#controlpanel .box-info .btn-inf-close { color: #e05f65; font-size: 1.2rem; cursor: pointer; float: right; top: -9px; left: -7px; }
 #controlpanel .strong { font-weight: bold; }
 #controlpanel .label:after { content: ':'; }
 #controlpanel button { font-size: 0.92rem; border-radius: 8px; padding: 5px 15px; }
@@ -236,7 +236,7 @@ var g_demo;
 
 $(document).on('click', '[data-modal]', event => doModal(event));
 $(document).on('click', '[data-request]', event => doRequest(event));
-$(document).on('click', '.btn-info-close', event => hideInfo({ target: event.target.parentElement }));
+$(document).on('click', '.btn-inf-close', event => hideInfo({ target: event.target.parentElement }));
 $(document).on('click', '.btn-api-key', () => { const url = new URL(location); url.searchParams.set('key', $('.txt-api-key').val().trim()); window.location.search = url.searchParams; });
 
 $(document).ready(function() {
@@ -965,7 +965,7 @@ function showMessage(type, message) {
 }
 
 function showInfo(event, message) {
-    $('<div class="box-info"><i class="fa-solid fa-circle-xmark btn-info btn-info-close"></i><div class="info">' + message + '</div></div>').appendTo($(event.target).closest('.box-body'));
+    $('<div class="box-info"><i class="fa-solid fa-circle-xmark btn-inf btn-inf-close"></i><div class="info">' + message + '</div></div>').appendTo($(event.target).closest('.box-body'));
 }
 
 function hideInfo(event) {
