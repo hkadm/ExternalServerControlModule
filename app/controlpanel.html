@@ -243,20 +243,20 @@ $(document).ready(function() {
     const url = new URL(location);
     g_demo = url.searchParams.get('demo');
     if (g_demo) {
-        if (url.hostname.includes('panel.hoskey.com')) {
-            g_base_url = 'invapi.hostkey.com';
+        if (url.hostname.includes('panel.hostkey.com')) {
+            // g_base_url = 'invapi.hostkey.com';
             init('f5ee96748613810c-471d93998e49e654');
         }
-        else if (url.hostname.includes('panel.hoskey.ru')) {
-            g_base_url = 'invapi.hostkey.ru';
+        else if (url.hostname.includes('panel.hostkey.ru')) {
+            // g_base_url = 'invapi.hostkey.ru';
             init('3501770a5d2e5339-debec2199152b649');
         }
         else if (g_demo === 'com') {
-            g_base_url = 'invapi.hostkey.com';
+            // g_base_url = 'invapi.hostkey.com';
             init('f5ee96748613810c-471d93998e49e654');
         }
         else if (g_demo === 'ru') {
-            g_base_url = 'invapi.hostkey.ru';
+            // g_base_url = 'invapi.hostkey.ru';
             init('3501770a5d2e5339-debec2199152b649');
         }
         else {
