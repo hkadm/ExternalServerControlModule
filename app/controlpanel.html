@@ -243,29 +243,11 @@ $(document).ready(function() {
     const url = new URL(location);
     g_demo = url.searchParams.get('demo');
     if (g_demo) {
-        if (url.hostname.includes('panel.hostkey.com')) {
-            // g_base_url = 'invapi.hostkey.com';
-            init('f5ee96748613810c-471d93998e49e654');
-        }
-        else if (url.hostname.includes('panel.hostkey.ru')) {
-            // g_base_url = 'invapi.hostkey.ru';
-            init('3501770a5d2e5339-debec2199152b649');
-        }
-        else if (g_demo === 'com') {
-            // g_base_url = 'invapi.hostkey.com';
-            init('f5ee96748613810c-471d93998e49e654');
-        }
-        else if (g_demo === 'ru') {
-            // g_base_url = 'invapi.hostkey.ru';
-            init('3501770a5d2e5339-debec2199152b649');
-        }
-        else {
-            g_demo = false;
-        }
+        if (url.hostname.includes('panel.hostkey.com')) { init('f5ee96748613810c-471d93998e49e654'); }
+        else if (url.hostname.includes('panel.hostkey.ru')) { init('3501770a5d2e5339-debec2199152b649'); }
+        else { g_demo = false; }
     }
-    else {
-        g_demo = false;
-    }
+    else { g_demo = false; }
 
     if (!g_demo) {
         g_base_url = url.searchParams.get('base') ?? g_base_url; // if you need to overide API URL and it different from your http://xxxx.com/controlpanel.html, submit it as ?base=your.api.hostname.com
