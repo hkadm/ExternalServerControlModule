@@ -658,7 +658,7 @@ async function checkCallback(callback, request) {
                 break;
                 case 'console':
                     showMessage('success', 'Server ' + request.id + ' console data received');
-                    const blob = new Blob([response.scope], { type: 'text/octet-stream' });
+                    const blob = new Blob([atob(response.scope)], { type: 'text/octet-stream' });
                     const filename = 'console.vv';
                     if (window.navigator.msSaveOrOpenBlob) {
                         window.navigator.msSaveBlob(blob, filename);
