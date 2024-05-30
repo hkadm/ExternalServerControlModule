@@ -76,6 +76,20 @@ var g_base_url = (new URL(location)).host; // redefine it with your local panel 
 
 google.charts.load('current', { packages: ['corechart', 'line', 'bar'] });
 
+var g_lang;
+const g_langs = {
+    en: {
+        'controlpanel_ttl': `Server control panel`,
+        'api_key_lbl': `Enter your <a href="#" onclick="window.open('https://hostkey.com/documentation/resellers/controlpanel', '_blank').focus()">server's API-key</a> to get control panel for it`,
+        'api_key_btn': `Server control panel`,
+    },
+    ru: {
+        'controlpanel_ttl': `Панель управления сервером`,
+        'api_key_lbl': `Введите <a href="#" onclick="window.open('https://hostkey.ru/documentation/resellers/controlpanel', '_blank').focus()">API-ключ сервера</a> для получения доступа к панели управления`,
+        'api_key_btn': `Запустить панель управления`,
+    },
+};
+
     </script>
 </head>
 <body id="controlpanel">
@@ -241,6 +255,13 @@ $(document).on('click', '.btn-api-key', () => { const url = new URL(location); u
 
 $(document).ready(function() {
     const url = new URL(location);
+
+    g_lang = url.hostname.includes('hostkey.ru') ? g_langs.ru : g_langs.en;
+    $('[lang]').each(function() {
+        let $this = $(this);
+        $this.html(g_lang[$this.attr('lang')]);
+    });
+
     g_demo = url.searchParams.get('demo');
     if (g_demo) {
         if (url.hostname.includes('panel.hostkey.com')) { init('f5ee96748613810c-471d93998e49e654'); }
